@@ -69,7 +69,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: false
           tags: |
-            ${{ env.ghcr_docker }}:test
+            ${{ inputs.docker_name }}:test
 
   docker-publish:
     name: Docker Build (Publish)
