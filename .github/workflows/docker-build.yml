@@ -1,0 +1,144 @@
+name: Reusable Docker
+
+on:
+  workflow_call:
+    inputs:
+      ### Docker Name
+      repo_name:
+        required: false
+        type: string
+        default: "${{ github.repository }}"
+        description: "Summary generate name, default will use repo name"
+      docker_name:
+        required: true
+        type: string
+        description: "ghcr.io Docker name"
+      ###
+
+      ### Docker Labeling ###
+      docker_label_author:
+        required: true
+        type: string
+        description: "Docker Label: Author"
+      docker_label_title:
+        required: false
+        type: string
+        description: "Docker Label: Title"
+      docker_label_description:
+        required: false
+        type: string
+        description: "Docker Label: Description"
+      ###
+
+      ### Version Detecter ###
+      version_detecter:
+        required: false
+        type: boolean
+        default: false
+        description: "Enable version detecter, default ``false``"
+      version_detecter_var:
+        required: false
+        type: string
+        description: "Placeholder of detect"
+      ###
+
+      ### Build Args ###
+      build_args:
+        required: false
+        type: string
+        description: "Special build arg on runtime"
+
+jobs:
+  docker-test:
+    name: Docker Build (Test)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checking Repository
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+
+      - name: Setup multiarch
+        uses: docker/setup-qemu-action@e81a89b1732b9c48d79cd809d8d81d79c4647a18 # tag=v2.1.0
+
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@8c0edbc76e98fa90f69d9a2c020dcb50019dc325 # tag=v2.2.1
+
+      - name: Multiarch Test
+        uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5 # tag=v3.2.0
+        with:
+          file: Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: false
+          tags: |
+            ${{ env.ghcr_docker }}:test
+
+  docker-publish:
+    name: Docker Build (Publish)
+    runs-on: ubuntu-latest
+    needs: [ docker-test ]
+    if: github.event_name != 'pull_request'
+    steps:
+      - name: Checking Repository
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+
+      - name: Setup multiarch
+        uses: docker/setup-qemu-action@e81a89b1732b9c48d79cd809d8d81d79c4647a18 # tag=v2.1.0
+
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@8c0edbc76e98fa90f69d9a2c020dcb50019dc325 # tag=v2.2.1
+
+      - name: Cache Docker layers
+        uses: actions/cache@58c146cc91c5b9e778e71775dfe9bf1442ad9a12 # v3.2.3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Login ghcr.io
+        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # tag=v2.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Detect Version
+        id: detect_version
+        if: ${{ inputs.version_detecter }}
+        run: |
+          version=$(grep '${{ inputs.version_detecter_var }}' Dockerfile | cut -d "=" -f 2)
+          echo "version=${version}" >> $GITHUB_OUTPUT
+          echo "## ${{ inputs.repo_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Detect Image Version: ${version}" >> $GITHUB_STEP_SUMMARY
+ 
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@57396166ad8aefe6098280995947635806a0e6ea # tag=v4.1.1
+        with:
+          images: |
+            ${{ inputs.docker_name }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}},value=${{ steps.detect_version.outputs.version }}
+          labels: |
+            org.opencontainers.image.authors=${{ inputs.docker_label_author }}
+            org.opencontainers.image.title=${{ inputs.docker_label_title }}
+            org.opencontainers.image.description=${{ inputs.docker_label_description }}
+
+      - name: Build & Push
+        uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5 # tag=v3.2.0
+        with:
+          file: Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            ${{ inputs.build_args }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
