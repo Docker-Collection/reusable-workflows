@@ -45,8 +45,12 @@ on:
       ### Build Args ###
       build_args:
         required: false
-        type: string
-        description: "Special build arg on runtime"
+        type: boolean
+        description: "Enable build args"
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   docker-test:
@@ -124,7 +128,13 @@ jobs:
           echo "## ${{ inputs.repo_name }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Detect Image Version: ${version}" >> $GITHUB_STEP_SUMMARY
- 
+
+      - name: Build Time
+        id: build_time_args
+        if: ${{ inputs. }}
+        run: |
+          echo "buildtime_arg=BUILDTIME=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}" >> $GITHUB_OUTPUT
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@57396166ad8aefe6098280995947635806a0e6ea # tag=v4.1.1
@@ -148,7 +158,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            ${{ inputs.build_args }}
+            ${{ steps.build_time_args.outputs.buildtime_arg }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
 
