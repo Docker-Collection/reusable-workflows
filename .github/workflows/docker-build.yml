@@ -131,7 +131,7 @@ jobs:
 
       - name: Build Time
         id: build_time_args
-        if: ${{ inputs. }}
+        if: ${{ inputs.build_args }}
         run: |
           echo "buildtime_arg=BUILDTIME=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}" >> $GITHUB_OUTPUT
 
