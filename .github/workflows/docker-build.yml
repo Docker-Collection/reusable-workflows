@@ -47,6 +47,10 @@ on:
         required: false
         type: boolean
         description: "Enable build args"
+      build_time_var:
+        required: false
+        type: string
+        description: "Build time var"
 
 permissions:
   contents: read
@@ -129,12 +133,6 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Detect Image Version: ${version}" >> $GITHUB_STEP_SUMMARY
 
-      - name: Build Time
-        id: build_time_args
-        if: ${{ inputs.build_args }}
-        run: |
-          echo "buildtime_arg=BUILDTIME=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}" >> $GITHUB_OUTPUT
-
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@57396166ad8aefe6098280995947635806a0e6ea # tag=v4.1.1
@@ -150,6 +148,19 @@ jobs:
             org.opencontainers.image.description=${{ inputs.docker_label_description }}
 
       - name: Build & Push
+        if: ${{ ! inputs.build_args }}
+        uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5 # tag=v3.2.0
+        with:
+          file: Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - name: Build & Push (Build Args)
+        if: ${{ inputs.build_args }}
         uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5 # tag=v3.2.0
         with:
           file: Dockerfile
@@ -158,7 +169,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            ${{ steps.build_time_args.outputs.buildtime_arg }}
+            ${{ inputs.build_time_var }}=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
 
