@@ -46,6 +46,7 @@ on:
       build_args:
         required: false
         type: boolean
+        default: false
         description: "Enable build args"
       build_time_var:
         required: false
