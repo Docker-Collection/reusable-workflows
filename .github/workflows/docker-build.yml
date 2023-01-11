@@ -154,7 +154,7 @@ jobs:
         id: detect_version
         if: ${{ inputs.version_detecter }}
         run: |
-          version=$(grep '${{ inputs.version_detecter_var }}' Dockerfile | cut -d "=" -f 2)
+          version=$(grep '${{ inputs.version_detecter_var }}' ${{ inputs.dockerfile }} | cut -d "=" -f 2)
           echo "version=${version}" >> $GITHUB_OUTPUT
           echo "## ${{ inputs.repo_name }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
