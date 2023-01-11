@@ -38,6 +38,7 @@ jobs:
       docker_label_title: "Testing Docker"
       docker_label_description: "This is a testing description"
       version_detecter: true
+      version_detecter_file: "test/Dockerfile"
       version_detecter_var: "TEST_VERSION="
       special_build: ${{ matrix.enable }}
       special_build_args: ${{ matrix.value }}
