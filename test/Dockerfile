@@ -1,6 +1,6 @@
 FROM alpine
 
-ARG TEST_VERSION=1.0
+ARG TEST_VERSION=1.0.0
 
 RUN apk update && \
     echo "Hello World!" && \
