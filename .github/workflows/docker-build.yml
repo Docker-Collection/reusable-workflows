@@ -12,17 +12,17 @@ on:
       docker_name:
         required: true
         type: string
-        description: "ghcr.io Docker name"
+        description: "ghcr.io push name"
       ###
 
       ### Docker Settings
       publish:
-        description: "Push Image to ghcr.io" 
+        description: "Push Image to ghcr.io, default is always push" 
         required: false
         type: boolean
         default: true
       dockerfile:
-        description: "Docker File Name"
+        description: "Docker file name, default is ``Dockerfile``"
         required: false
         type: string
         default: "Dockerfile"
