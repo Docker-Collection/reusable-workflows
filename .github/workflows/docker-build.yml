@@ -5,14 +5,14 @@ on:
     inputs:
       ### Docker Name
       repo_name:
+        description: "Summary generate name, default will use repo name"
         required: false
         type: string
         default: "${{ github.repository }}"
-        description: "Summary generate name, default will use repo name"
       docker_name:
+        description: "ghcr.io push name"
         required: true
         type: string
-        description: "ghcr.io push name"
       ###
 
       ### Docker Settings
@@ -34,49 +34,54 @@ on:
 
       ### Docker Labeling ###
       docker_label_author:
+        description: "Docker Label: Author"
         required: true
         type: string
-        description: "Docker Label: Author"
       docker_label_title:
-        required: false
-        type: string
         description: "Docker Label: Title"
-      docker_label_description:
         required: false
         type: string
+      docker_label_description:
         description: "Docker Label: Description"
+        required: false
+        type: string
       ###
 
       ### Version Detecter ###
       version_detecter:
+        description: "Enable version detecter, default ``false``"
         required: false
         type: boolean
         default: false
-        description: "Enable version detecter, default ``false``"
       version_detecter_var:
+        description: "Placeholder of detect"
         required: false
         type: string
-        description: "Placeholder of detect"
+      version_detecter_cut:
+        description: "Cut number, Default is ``2``"
+        required: false
+        type: string
+        default: "2"
       ###
 
       ### Build Args ###
       build_args:
+        description: "Build Args"
         required: false
         type: boolean
         default: false
-        description: "Build Args"
       ###
 
       ### Special Build Args ###
       special_build:
+        description: "Special step for generate buildtime from docker meta step"
         required: false
         type: boolean
         default: false
-        description: "Special step for generate buildtime from docker meta step"
       special_build_args:
+        description: "Special step of the build time var name"
         required: false
         type: string
-        description: "Special step of the build time var name"
       ###
 
 permissions:
@@ -154,7 +159,7 @@ jobs:
         id: detect_version
         if: ${{ inputs.version_detecter }}
         run: |
-          version=$(grep '${{ inputs.version_detecter_var }}' ${{ inputs.dockerfile }} | cut -d "=" -f 2)
+          version=$(grep '${{ inputs.version_detecter_var }}' ${{ inputs.dockerfile }} | cut -d "=" -f ${{ inputs.version_detecter_cut }})
           echo "version=${version}" >> $GITHUB_OUTPUT
           echo "## ${{ inputs.repo_name }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

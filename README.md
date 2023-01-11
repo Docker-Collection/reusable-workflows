@@ -20,6 +20,7 @@ Simple docker build action.
 | docker_label_description | String | Docker Label: Description | false |
 | version_detecter | Boolean | Enable version detecter, default ``false`` | false |
 | version_detecter_var | String | Placeholder of detect | false |
+| version_detecter_cut | String | Cut number, Default is ``2`` | false |
 | build_args | String | Build Args | false |
 | special_build | Boolean | Special step for generate buildtime from docker meta step | false |
 | special_build_args | String | Special step of the build time var name | false |
