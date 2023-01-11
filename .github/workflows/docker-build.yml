@@ -15,6 +15,23 @@ on:
         description: "ghcr.io Docker name"
       ###
 
+      ### Docker Settings
+      publish:
+        description: "Push Image to ghcr.io" 
+        required: false
+        type: boolean
+        default: true
+      dockerfile:
+        description: "Docker File Name"
+        required: false
+        type: string
+        default: "Dockerfile"
+      platforms:
+        description: "Image support platforms, Default is ``linux/amd64,linux/arm64``"
+        required: false
+        type: string
+        default: "linux/amd64,linux/arm64"
+
       ### Docker Labeling ###
       docker_label_author:
         required: true
@@ -47,11 +64,20 @@ on:
         required: false
         type: boolean
         default: false
-        description: "Enable build args"
-      build_time_var:
+        description: "Build Args"
+      ###
+
+      ### Special Build Args ###
+      special_build:
+        required: false
+        type: boolean
+        default: false
+        description: "Special step for generate buildtime from docker meta step"
+      special_build_args:
         required: false
         type: string
-        description: "Build time var"
+        description: "Special step of the build time var name"
+      ###
 
 permissions:
   contents: read
@@ -75,15 +101,15 @@ jobs:
         uses: actions/cache@58c146cc91c5b9e778e71775dfe9bf1442ad9a12 # v3.2.3
         with:
           path: /tmp/.buildx-cache
-          key: ${{ github.workflow }}-${{ runner.os }}-buildx-${{ github.sha }}
+          key: ${{ github.repository }}-${{ github.workflow }}-Test-${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
-            ${{ github.workflow }}-${{ runner.os }}-buildx-
+            ${{ github.repository }}-${{ github.workflow }}-Test-${{ runner.os }}-buildx-
 
-      - name: Multiarch Test
+      - name: Build & Test
         uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5 # tag=v3.2.0
         with:
-          file: Dockerfile
-          platforms: linux/amd64,linux/arm64
+          file: ${{ inputs.dockerfile }}
+          platforms: ${{ inputs.platforms }}
           push: false
           tags: ${{ inputs.docker_name }}:test
           cache-from: type=local,src=/tmp/.buildx-cache
@@ -113,9 +139,9 @@ jobs:
         uses: actions/cache@58c146cc91c5b9e778e71775dfe9bf1442ad9a12 # v3.2.3
         with:
           path: /tmp/.buildx-cache
-          key: ${{ github.workflow }}-${{ runner.os }}-buildx-${{ github.sha }}
+          key: ${{ github.repository }}-${{ github.workflow }}-Publish-${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
-            ${{ github.workflow }}-${{ runner.os }}-buildx-
+            ${{ github.repository }}-${{ github.workflow }}-Publish-${{ runner.os }}-buildx-
 
       - name: Login ghcr.io
         uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # tag=v2.1.0
@@ -149,28 +175,30 @@ jobs:
             org.opencontainers.image.description=${{ inputs.docker_label_description }}
 
       - name: Build & Push
-        if: ${{ ! inputs.build_args }}
+        if: ${{ ! inputs.special_build }}
         uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5 # tag=v3.2.0
         with:
-          file: Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
-
-      - name: Build & Push (Build Args)
-        if: ${{ inputs.build_args }}
-        uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5 # tag=v3.2.0
-        with:
-          file: Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
+          file: ${{ inputs.dockerfile }}
+          platforms: ${{ inputs.platforms }}
+          push: ${{ inputs.publish }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            ${{ inputs.build_time_var }}=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
+            ${{ inputs.build_args }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - name: Build & Push (Special Build Args)
+        if: ${{ inputs.special_build }}
+        uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5 # tag=v3.2.0
+        with:
+          file: ${{ inputs.dockerfile }}
+          platforms: linux/amd64,linux/arm64
+          push: ${{ inputs.publish }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            ${{ inputs.special_build_args }}=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
 

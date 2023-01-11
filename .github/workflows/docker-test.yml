@@ -1,0 +1,43 @@
+name: Build Docker Test
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - "main"
+    paths:
+      - ".github/workflows/docker-build.yml"
+      - ".github/workflows/docker-test.yml"
+      - "test/**"
+  pull_request:
+    branches:
+      - "main"
+    paths:
+      - ".github/workflows/docker-build.yml"
+      - ".github/workflows/docker-test.yml"
+      - "test/**"
+
+jobs:
+  docker:
+    name: Docker Build Test (${{ matrix.name }})
+    strategy:
+      matrix:
+        include:
+          - name: "Special Build"
+            enable: true
+            vaule: "BUILDTIME"
+          - name: "Normal Build"
+            enable: false
+            value: ""
+    uses: Docker-Collection/reusable-workflows/.github/workflows/docker-build.yml@main
+    with:
+      docker_name: "ghcr.io/docker-collection/test"
+      publish: false
+      dockerfile: "test/Dockerfile"
+      docker_label_author: "Efina"
+      docker_label_title: "Testing Docker"
+      docker_label_description: "This is a testing description"
+      version_detecter: true
+      version_detecter_var: "TEST_VERSION="
+      special_build: ${{ matrix.enable }}
+      special_build_args: ${{ matrix.value }}
