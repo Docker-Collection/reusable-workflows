@@ -22,12 +22,12 @@ on:
         type: boolean
         default: true
       dockerfile:
-        description: "Docker file name, default is ``Dockerfile``"
+        description: "Docker file name, default ``Dockerfile``"
         required: false
         type: string
         default: "Dockerfile"
       platforms:
-        description: "Image support platforms, Default is ``linux/amd64,linux/arm64``"
+        description: "Image support platforms, default ``linux/amd64,linux/arm64``"
         required: false
         type: string
         default: "linux/amd64,linux/arm64"
@@ -53,12 +53,17 @@ on:
         required: false
         type: boolean
         default: false
+      version_detecter_file:
+        description: "File of detect version string, default ``Dockerfile``"
+        required: false
+        type: string
+        default: "Dockerfile"
       version_detecter_var:
         description: "Placeholder of detect"
         required: false
         type: string
       version_detecter_cut:
-        description: "Cut number, Default is ``2``"
+        description: "Cut number, default ``2``"
         required: false
         type: string
         default: "2"
@@ -159,7 +164,7 @@ jobs:
         id: detect_version
         if: ${{ inputs.version_detecter }}
         run: |
-          version=$(grep '${{ inputs.version_detecter_var }}' ${{ inputs.dockerfile }} | cut -d "=" -f ${{ inputs.version_detecter_cut }})
+          version=$(grep '${{ inputs.version_detecter_var }}' ${{ inputs.version_detecter_file }} | cut -d "=" -f ${{ inputs.version_detecter_cut }})
           echo "version=${version}" >> $GITHUB_OUTPUT
           echo "## ${{ inputs.repo_name }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
