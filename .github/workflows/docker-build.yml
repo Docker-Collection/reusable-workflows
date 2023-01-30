@@ -116,7 +116,7 @@ jobs:
             ${{ github.repository }}-${{ github.workflow }}-Test-${{ runner.os }}-buildx-
 
       - name: Build & Test
-        uses: docker/build-push-action@1104d471370f9806843c095c1db02b5a90c5f8b6 # v3.3.1
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671 # v4.0.0
         with:
           file: ${{ inputs.dockerfile }}
           platforms: ${{ inputs.platforms }}
@@ -186,7 +186,7 @@ jobs:
 
       - name: Build & Push
         if: ${{ ! inputs.special_build }}
-        uses: docker/build-push-action@1104d471370f9806843c095c1db02b5a90c5f8b6 # v3.3.1
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671 # v4.0.0
         with:
           file: ${{ inputs.dockerfile }}
           platforms: ${{ inputs.platforms }}
@@ -200,7 +200,7 @@ jobs:
 
       - name: Build & Push (Special Build Args)
         if: ${{ inputs.special_build }}
-        uses: docker/build-push-action@1104d471370f9806843c095c1db02b5a90c5f8b6 # v3.3.1
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671 # v4.0.0
         with:
           file: ${{ inputs.dockerfile }}
           platforms: linux/amd64,linux/arm64
