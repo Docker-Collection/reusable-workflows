@@ -21,6 +21,10 @@ on:
         required: false
         type: boolean
         default: true
+      context:
+        description: "Custom file path"
+        required: false
+        type: string
       dockerfile:
         description: "Docker file name, default ``Dockerfile``"
         required: false
