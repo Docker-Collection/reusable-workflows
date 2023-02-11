@@ -13,6 +13,7 @@ Simple docker build action.
 | repo_name | String | Summary generate name, default will use repo name | false |
 | docker_name | String | ghcr.io push name | true |
 | publish | Boolean | Push Image to ghcr.io, default is always push | false |
+| context | String | Custom file path | false |
 | dockerfile | String | Docker file name, default ``Dockerfile`` | false |
 | platforms | String | Image support platforms, default ``linux/amd64,linux/arm64`` | false |
 | docker_label_author | String | Docker Label: Author | true |
