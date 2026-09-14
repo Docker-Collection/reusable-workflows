@@ -29,7 +29,7 @@ jobs:
           - name: "Normal Build"
             enable: false
             value: ""
-    uses: Docker-Collection/reusable-workflows/.github/workflows/docker-build.yml@2e68754420c5563cbee3d69878a1fa174b1ac2f2 # main
+    uses: Docker-Collection/reusable-workflows/.github/workflows/docker-build.yml@e01170942cf43d5685020d9a7a893c03369b1d1e # main
     with:
       docker_name: "ghcr.io/docker-collection/test"
       publish: false
